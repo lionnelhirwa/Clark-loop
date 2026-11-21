@@ -1,41 +1,50 @@
 # ClarkLoop
 
-A Clark-first reuse app that helps students, staff, and the campus thrift store
-give items a next life instead of sending them to a landfill, especially at move-out.
-Built for the Environment track.
+**Keep it in the loop.** Clarkies' first reuse app, built for environmental sustainability and social impact.
 
-Post or grab free items, buy and sell, reserve from the thrift store, chat, and get a
-rule-based "best next life" recommendation (reuse, repair, donate, or recycle).
-There is also a suggestion box for campus sustainability ideas.
+## What it is
+ClarkLoop is a campus reuse app for Clark University. Instead of throwing usable things away,
+especially during move-out, students, staff, and the campus thrift store can give items a next
+life: grab something left out for free, buy or sell second-hand, reserve from the thrift store,
+chat to arrange a handoff, and get a "best next life" suggestion (reuse, repair, donate, recycle).
+There's also a suggestion box for campus sustainability ideas, and an impact tracker.
 
-## Run it
-It's a plain web app, no install. Either:
-- **Double-click `index.html`** to open it in your browser, or
-- In VS Code, install the **Live Server** extension, then right-click `index.html`
-  and choose **Open with Live Server** (recommended; the saved-data feature is more
-  reliable over `http://` than opening the file directly).
+It's a self-contained web app (HTML, CSS, JavaScript). No build step, no server. Data is saved
+in the browser, so it runs even offline.
+
+## Inspired by
+- **Fizz** (the campus social app): the clean feed and the bottom tab bar.
+- **Modern app onboarding screens**: the landing page with a moving grid of items and a big
+  "Get started" button.
+- **The circular economy**: keeping products in use longer instead of sending them to landfill,
+  which is the core idea behind the whole app.
+
+## How to access it
+- **Easiest (live link):** once GitHub Pages is on for this repo, open
+  `https://lionnelhirwa.github.io/clarkloop` on any phone or computer. No install.
+- **On your computer:** double-click `index.html`, or in VS Code use the Live Server extension
+  (right-click `index.html` -> Open with Live Server), or run `python -m http.server 5500` and
+  open `http://localhost:5500`.
+- **Try it fast:** on the landing page tap **Demo** (top-right) to jump straight in, or
+  **Get started** to make an account.
 
 ## Files
-- `index.html` — the page shell and what loads the styles and scripts
-- `styles.css` — all styling (dark and light themes, Clark red accent)
-- `data.js` — categories, partner orgs, impact assumptions, and the scoring rules
-- `app.js` — app state, screens (Feed, Market, Post, Chat, LoopBack), and interactions
+- `index.html` - the page shell that loads the styles and scripts
+- `styles.css` - all styling (dark app, white login/sign-up, Clark red gradient)
+- `data.js` - categories, campus buildings, partner orgs, impact assumptions, scoring, icons
+- `app.js` - onboarding, accounts, screens (Feed, Market, Post, Chat, LoopBack), chat, notifications, profile
+- `logo.svg` - the app icon (a loop that reads as a "C")
+- `logo-lockup.svg` - the logo next to the "ClarkLoop" wordmark
 
-## Try it
-Tap a demo account on the sign-in screen (Clark student, Clark staff, outside visitor,
-or thrift store), then open an item, reserve or message, pick up a free item, and open
-the LoopBack tab for the recommender and suggestion box.
+## Honest limits (worth saying in the demo)
+- Data is saved in this browser only; it does not sync between phones or people yet. A shared
+  backend is the main next step.
+- Accounts and passwords are a prototype, not real security.
+- In-app payment and shipping are not built; those buttons say "coming soon."
+- Some chat replies are simulated so the demo feels alive.
+- Impact numbers (pounds, dollars, CO2) are placeholders, not sourced yet.
 
-## Honest limits (say these in the demo)
-- Data is saved in your browser only. It does not sync between phones or people.
-  Real multi-user sharing needs a backend, which is a next step.
-- Emails are not verified yet. A real version sends a confirmation link.
-- In-app payment and shipping are not built; those buttons say "coming soon".
-- The thrift store partnership is a demo idea, not an agreement.
-- Repair/recycle partners and all impact numbers (pounds, dollars, CO₂) are
-  samples or placeholders. Replace them with sourced figures before relying on them.
-
-## Possible next steps
-- A backend so posts, chat, and the suggestion box are shared across devices.
+## Next steps
+- A backend so posts, chat, and ideas are shared across devices.
 - Verified Clark email sign-in.
-- An AI assistant (for example Gemini) that reads a photo and suggests what to do.
+- An AI assistant (for example Gemini) that reads a photo and suggests what to do with an item.
