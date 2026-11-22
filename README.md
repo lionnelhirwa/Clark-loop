@@ -19,9 +19,9 @@ in the browser, so it runs even offline.
 - **The circular economy**: keeping products in use longer instead of sending them to landfill,
   which is the core idea behind the whole app.
 
-## How to access it
+## How to access the demo
 - **Easiest (live link):** once GitHub Pages is on for this repo, open
-  `https://lionnelhirwa.github.io/clarkloop` on any phone or computer. No install.
+  `https://lionnelhirwa.github.io/Clark-loop/` on any phone or computer. No install.
 - **On your computer:** double-click `index.html`, or in VS Code use the Live Server extension
   (right-click `index.html` -> Open with Live Server), or run `python -m http.server 5500` and
   open `http://localhost:5500`.
@@ -36,7 +36,7 @@ in the browser, so it runs even offline.
 - `logo.svg` - the app icon (a loop that reads as a "C")
 - `logo-lockup.svg` - the logo next to the "ClarkLoop" wordmark
 
-## Honest limits (worth saying in the demo)
+## limits So far  
 - Data is saved in this browser only; it does not sync between phones or people yet. A shared
   backend is the main next step.
 - Accounts and passwords are a prototype, not real security.
