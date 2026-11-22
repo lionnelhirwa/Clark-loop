@@ -28,6 +28,7 @@ function newPost(){return{title:"",desc:"",photos:[],cat:null,sub:null,type:null
 function newSignup(){return{first:"",last:"",role:"",subrole:"",gradMonth:"",gradYear:"",email:"",username:"",pass:"",anon:false};}
 const isClark=()=>S.user&&(S.user.role==="clark"||S.user.role==="shop");
 const isShop=()=>S.user&&S.user.role==="shop";
+const isMaintenance=()=>S.user&&S.user.acct&&S.user.acct.role==="staff"&&S.user.acct.subrole==="maintenance";
 const canAct=()=>S.user&&S.user.role!=="guest";
 const me=()=>S.user?S.user.email:"";
 function nm(email){return DB.names[email]||String(email||"").split("@")[0];}
@@ -97,7 +98,23 @@ function doLogin(){const id=(S.login.id||"").trim().toLowerCase();const pass=S.l
  if(!acc)return toast("No account found. Tap Get started to make one.");
  if(acc.pass!==pass)return toast("Wrong password.");
  S.login={id:"",pass:""};signInAccount(acc);toast("Welcome back!");}
-function demoLogin(){const acc={id:0,first:"Demo",last:"User",role:"student",subrole:null,gradMonth:"May",gradYear:"2029",email:"demo@clarku.edu",username:"demo",anon:false,pass:""};signInAccount(acc);}
+function openDemoModal(){
+ const opts=[["student","Clark student","Browse, grab free items, buy, sell, and chat"],
+  ["maintenance","Clark maintenance staff","Student reports and the impact summary"],
+  ["thrift","Clark thrift store staff","Full access, plus manage shop reservations"],
+  ["outside","Outside visitor","See public posts and shop the thrift store"]];
+ modalWrap(`<b style="font-size:17px">Try a demo</b><p class="sub" style="margin:6px 0 13px">See ClarkLoop from each kind of account.</p>`+
+  opts.map(o=>`<button class="demopick" data-act="demorole" data-r="${o[0]}"><div><div style="font-weight:700;font-size:15px">${o[1]}</div><div class="sub" style="margin:0">${o[2]}</div></div>${svg("chev",18)}</button>`).join("")+
+  `<button class="btn ghost sm" data-act="modalClose" style="margin-top:4px">Cancel</button>`);
+}
+function demoLoginRole(r){
+ const map={student:{first:"Demo",last:"Student",role:"student",subrole:null,gradMonth:"May",gradYear:"2029",email:"demo.student@clarku.edu"},
+  maintenance:{first:"Sam",last:"Rivera",role:"staff",subrole:"maintenance",email:"facilities@clarku.edu"},
+  thrift:{first:"Clark",last:"Thrift",role:"staff",subrole:"thrift",email:SHOP_NAME},
+  outside:{first:"Jordan",last:"Lee",role:"outside",subrole:null,email:"jordan@example.com"}};
+ const acc=Object.assign({id:0,username:"",anon:false,pass:"",gradMonth:"",gradYear:""},map[r]);
+ S.screen="feed";signInAccount(acc);
+}
 
 /* ---------- visibility ---------- */
 function visible(l){if(isClark())return true;return l.vis==="everyone";}
@@ -207,12 +224,26 @@ function topbar(){
   <button class="avatar" data-act="avatarmenu" aria-label="Account">${esc(initials(myName()))}</button>
   ${menu}</div>`;
 }
-function roleLabel(){return isShop()?"Thrift store staff":S.user.role==="clark"?(S.user.acct&&S.user.acct.role==="staff"?"Clark staff":"Clark student"):"Outside visitor";}
+function roleLabel(){if(isShop())return "Thrift store staff";if(isMaintenance())return "Maintenance staff";if(S.user.role==="clark")return "Clark student";return "Outside visitor";}
+function navIcon(k){return {feed:"feed",market:"market",post:"post",chat:"chat",loop:"loop",reports:"book",impact:"leaf"}[k]||k;}
 function navbar(){
- const tabs=[["feed","Feed"],["market","Market"],["post","Post"],["chat","Chat"],["loop","LoopBack"]];
- return `<div class="nav">`+tabs.map(([k,l])=>`<button data-act="tab" data-tab="${k}" class="${S.screen===k?"on":""}">${svg(k)}<span>${l}</span></button>`).join("")+`</div>`;
+ const tabs=isMaintenance()?[["feed","Feed"],["reports","Reports"],["impact","Impact"]]
+   :[["feed","Feed"],["market","Market"],["post","Post"],["chat","Chat"],["loop","LoopBack"]];
+ return `<div class="nav">`+tabs.map(([k,l])=>`<button data-act="tab" data-tab="${k}" class="${S.screen===k?"on":""}">${svg(navIcon(k))}<span>${l}</span></button>`).join("")+`</div>`;
 }
-function screenHtml(){return S.screen==="feed"?feedScreen():S.screen==="market"?marketScreen():S.screen==="post"?postScreen():S.screen==="chat"?chatScreen():loopScreen();}
+function screenHtml(){
+ if(isMaintenance())return S.screen==="reports"?reportsScreen():S.screen==="impact"?impactScreen():feedScreen();
+ return S.screen==="feed"?feedScreen():S.screen==="market"?marketScreen():S.screen==="post"?postScreen():S.screen==="chat"?chatScreen():loopScreen();}
+function firstName(){return (S.user&&S.user.acct&&S.user.acct.first)?S.user.acct.first:"there";}
+function greet(){return `<div class="greet"><div class="gsmall">Welcome back</div><div class="gname">Hi, ${esc(firstName())}</div></div>`;}
+function quickActions(){
+ let items;
+ if(isMaintenance())items=[["book","reports","Reports"],["leaf","impact","Impact"]];
+ else if(S.user.role==="visitor")items=[["market","market","Browse"],["leaf","loop","Donate"]];
+ else items=[["post","post","Post item"],["market","market","Browse"],["leaf","loop","Donate"],["edit","loop","Suggest"]];
+ return `<div class="qa" style="grid-template-columns:repeat(${items.length},minmax(0,1fr))">`+
+  items.map(([ic,tab,label])=>`<button data-act="tab" data-tab="${tab}"><span class="qi">${svg(ic,20)}</span>${label}</button>`).join("")+`</div>`;
+}
 
 /* ---------- cards ---------- */
 function thumbHtml(l,size){const g=catObj(l.cat).g;return `<div class="thumb" style="${gradStyle(g)}${size?`;width:${size}px;height:${size}px`:""}">${l.photos&&l.photos[0]?`<img src="${l.photos[0]}" alt="">`:svg(catIcon(l.cat),30)}</div>`;}
@@ -235,8 +266,8 @@ function feedScreen(){
  const items=feedItems();
  const body=items.length?`<div class="list">${items.map(cardHtml).join("")}</div>`
   :`<div class="empty">${isClark()?"Nothing free right now. Check back around move-out.":"No free items available for you right now.<br>Students can share some items with everyone."}</div>`;
- return `<div class="pad"><h2 class="screen">Free stuff to grab</h2>
-  <p class="sub">Left outside? Open it, then tap “I picked it up” so nobody wastes a trip.</p>
+ return `<div class="pad">${greet()}${quickActions()}<h2 class="screen">Free nearby</h2>
+  <p class="sub">Something left out for grabs? Open it, then tap “I picked it up” so no one else makes the trip.</p>
   <div class="toggle"><span style="font-size:13px;color:var(--muted)">Show already picked up</span>
    <div class="sw ${S.showClosed?"on":""}" data-act="showclosed" role="button"></div></div>
   ${body}</div>`;
@@ -492,20 +523,36 @@ function settingsPage(){
   </div></div>`;
 }
 
-function impactPage(){
+function impactBlock(){
  const done=DB.listings.filter(l=>l.status==="picked_up"||l.status==="sold");
  let lb=0,usd=0,co2=0;done.forEach(l=>{const im=impactOf(l.cat,"reuse");if(im){lb+=im.lb;usd+=im.usd;co2+=im.co2;}});
- const mineDone=done.filter(l=>l.seller===me()||l.closedBy===me()).length;
- return subHead("Impact")+`<div class="content"><div class="pad">
-   <h2 class="screen">Impact so far</h2><p class="sub">Across everyone on ClarkLoop.</p>
-   <div class="statgrid">
-    <div class="stat g"><div class="n">${done.length}</div><div class="l">Items rehomed</div></div>
-    <div class="stat"><div class="n">${Math.round(lb)}</div><div class="l">lb kept from waste</div></div>
-    <div class="stat"><div class="n">$${Math.round(usd)}</div><div class="l">saved (est.)</div></div>
-    <div class="stat"><div class="n">${Math.round(co2)}</div><div class="l">lb CO₂e avoided</div></div></div>
-   <div class="card" style="padding:14px;margin-top:14px"><b>Your part</b><div class="sub" style="margin:6px 0 0">You've helped rehome ${mineDone} item(s). Every one keeps something usable out of the landfill.</div></div>
-   <p class="sub" style="margin-top:12px">Counts items marked picked up or sold. Weight, price, and CO₂ figures are placeholders, not sourced yet.</p>
-  </div></div>`;
+ const addressed=DB.suggestions.filter(s=>s.addressed).length;
+ return `<div class="statgrid">
+   <div class="stat g"><div class="n">${done.length}</div><div class="l">Items rehomed</div></div>
+   <div class="stat"><div class="n">${Math.round(lb)}</div><div class="l">lb kept from waste</div></div>
+   <div class="stat"><div class="n">$${Math.round(usd)}</div><div class="l">saved (est.)</div></div>
+   <div class="stat"><div class="n">${Math.round(co2)}</div><div class="l">lb CO₂e avoided</div></div></div>
+  <div class="card" style="padding:14px;margin-top:14px"><b>Ideas handled</b><div class="sub" style="margin:6px 0 0">${addressed} of ${DB.suggestions.length} community ideas marked addressed.</div></div>
+  <p class="sub" style="margin-top:12px">Counts items marked picked up or sold. Weight, price, and CO₂ figures are placeholders, not sourced yet.</p>`;
+}
+function impactPage(){return subHead("Impact")+`<div class="content"><div class="pad"><h2 class="screen">Impact so far</h2><p class="sub">Across everyone on ClarkLoop.</p>${impactBlock()}</div></div>`;}
+function impactScreen(){return `<div class="pad">${greet()}<h2 class="screen">Impact summary</h2><p class="sub">What ClarkLoop has kept out of the landfill so far.</p>${impactBlock()}</div>`;}
+function reportsScreen(){
+ const sg=DB.suggestions.slice().sort((a,b)=>b.votes.length-a.votes.length||new Date(b.ts)-new Date(a.ts));
+ const open=sg.filter(s=>!s.addressed).length;
+ const cards=sg.map(s=>`<div class="sgcard" style="align-items:flex-start">
+   <div style="flex:1;min-width:0">
+    <div class="meta" style="color:var(--accent-text);font-weight:650">${esc(s.topic)}${s.place?" · "+esc(s.place):""}</div>
+    <div style="margin:3px 0;font-size:14.5px">${esc(s.body)}</div>
+    <div class="meta">${s.anon?"Anonymous":esc(nm(s.author))} · ${new Date(s.ts).toLocaleDateString()} · ${s.votes.length} support</div></div>
+   <button class="vote ${s.addressed?"on":""}" data-act="addr" data-id="${s.id}">${svg(s.addressed?"check":"clock",16)}<div class="vn" style="font-size:9.5px;font-weight:700">${s.addressed?"Done":"Open"}</div></button></div>`).join("");
+ return `<div class="pad">${greet()}<h2 class="screen">Community reports</h2>
+  <p class="sub">What students are asking for, most supported first. Mark what you've handled, then export the list for facilities.</p>
+  <div class="statgrid" style="margin-bottom:14px">
+   <div class="stat"><div class="n">${sg.length}</div><div class="l">Total ideas</div></div>
+   <div class="stat"><div class="n">${open}</div><div class="l">Still open</div></div></div>
+  ${cards||'<div class="empty">No reports yet.</div>'}
+  <button class="btn sm ghost" data-act="exportsug" style="margin-top:12px">Export reports (copy)</button></div>`;
 }
 
 /* ---------- sign in view already handled ---------- */
@@ -523,7 +570,8 @@ document.addEventListener("click",e=>{
  if(!el)return;
  const id=el.dataset.id?+el.dataset.id:null;
  // onboarding
- if(a==="demo"){demoLogin();return;}
+ if(a==="demo"){openDemoModal();return;}
+ if(a==="demorole"){closeModal();demoLoginRole(el.dataset.r);return;}
  if(a==="gosignup"){S.auth={mode:"signup"};render();return;}
  if(a==="gologin"){S.auth={mode:"login"};render();return;}
  if(a==="toland"){S.auth={mode:"landing"};render();return;}
@@ -577,6 +625,7 @@ document.addEventListener("click",e=>{
  if(a==="acond"){S.assist.cond=el.dataset.v;render();return;}
  if(a==="sganon"){S.sug.anon=!S.sug.anon;render();return;}
  if(a==="vote"){const s=DB.suggestions.find(x=>x.id===id);if(s&&!s.votes.includes(me())){s.votes.push(me());save();}render();return;}
+ if(a==="addr"){const s=DB.suggestions.find(x=>x.id===id);if(s){s.addressed=!s.addressed;save();}render();return;}
  if(a==="submitsug"){if(!S.sug.body.trim())return toast("Write your idea first.");DB.suggestions.push({id:DB.seq++,author:me(),anon:S.sug.anon,topic:S.sug.topic,place:S.sug.place.trim(),body:S.sug.body.trim(),votes:[],ts:now(0)});S.sug={topic:TOPICS[0],place:"",body:"",anon:false};save();toast("Idea added.");render();return;}
  if(a==="exportsug"){exportSug();return;}
  if(a==="submitdon"){if(!S.don.what.trim())return toast("Say what you're donating.");DB.donations.push({...S.don,donor:me(),ts:now(0)});S.don.what="";S.don.where="";save();toast("Pickup requested (demo only).");render();return;}
