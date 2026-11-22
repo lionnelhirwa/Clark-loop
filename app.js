@@ -218,7 +218,7 @@ function topbar(){
    <button data-act="goimpact">${svg("leaf",18)} Impact</button>
    <button class="danger" data-act="signout">${svg("logout",18)} Log out</button></div>`:"";
  return `<div class="bar">
-  <div class="brand"><span class="brandC">${brandMark()}</span><span class="brandtext">ClarkLoop</span></div><div class="spacer"></div>
+  <div class="brand"><span class="brandtext">ClarkLoop</span></div><div class="spacer"></div>
   <button class="iconbtn" data-act="theme" aria-label="Theme">${svg(t==="dark"?"sun":"moon",21)}</button>
   <button class="iconbtn" data-act="notif" aria-label="Notifications">${svg("bell",21)}${un?`<span class="badge-dot">${un>9?"9+":un}</span>`:""}</button>
   <button class="avatar" data-act="avatarmenu" aria-label="Account">${esc(initials(myName()))}</button>
